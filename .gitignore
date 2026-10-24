@@ -1,0 +1,6 @@
+
+*.zip
+bald_people/
+datasets/
+venv/
+.venv/

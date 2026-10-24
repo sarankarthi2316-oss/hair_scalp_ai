@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FollicleAI | Scalp & Hair Diagnostics</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 860px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 6px;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 8px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+        
+        .upload-box {
+            border: 2px dashed #475569;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            background: #0f172a;
+            cursor: pointer;
+            position: relative;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .upload-box:hover {
+            border-color: #38bdf8;
+            background: #1e293b;
+        }
+        .upload-box input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 5;
+        }
+        .upload-icon { font-size: 30px; margin-bottom: 6px; }
+        .upload-title { font-weight: 600; font-size: 14px; color: #f8fafc; }
+        .upload-desc { font-size: 12px; color: #94a3b8; margin: 4px 0 10px 0; }
+        .btn-fake {
+            display: inline-block;
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 4px;
+        }
+        
+        /* Image Preview Box */
+        .preview-img {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #38bdf8;
+            margin-top: 10px;
+            display: none;
+        }
+        .filename-display {
+            font-size: 12px;
+            color: #34d399;
+            font-weight: 600;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        input[type="number"], select {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+        input[type="number"]:focus, select:focus {
+            border-color: #38bdf8;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-submit:hover { opacity: 0.95; }
+        .btn-submit:disabled { background: #475569; cursor: not-allowed; }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #334155;
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #resultsArea {
+            display: none;
+            margin-top: 25px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 650px) { .results-grid { grid-template-columns: 1fr; } }
+        
+        .result-stat {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
+        .stat-value { font-size: 15px; font-weight: 800; color: #38bdf8; margin: 6px 0; }
+        .stat-sub { font-size: 12px; color: #64748b; }
+
+        .scale-guide {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .scale-guide h4 { font-size: 13px; color: #f8fafc; margin-bottom: 10px; }
+        .scale-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
+        .scale-item {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .scale-item.highlight {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .routine-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>FollicleAI Diagnostics</h1>
+        <p>Multimodal AI for Scalp Condition Classification & Norwood Density Analysis</p>
+    </div>
+
+    <div class="card">
+        <form id="diagForm">
+            <!-- Part 1: Images with Visual Previews -->
+            <div class="section-title">1. Upload Diagnostic Images</div>
+            <div class="grid-2">
+                <!-- Scalp Box -->
+                <div class="upload-box" id="box1">
+                    <input type="file" name="scalp_image" id="scalpInput" accept="image/*" required>
+                    <div id="box1Content">
+                        <div class="upload-icon">🔬</div>
+                        <div class="upload-title">Scalp Close-Up Photo</div>
+                        <div class="upload-desc">Evaluates 14 scalp conditions</div>
+                        <span class="btn-fake">Choose Scalp Image</span>
+                    </div>
+                    <img id="scalpPreviewImg" class="preview-img" alt="Scalp Preview">
+                    <div class="filename-display" id="file1Text"></div>
+                </div>
+
+                <!-- Head/Hair Box -->
+                <div class="upload-box" id="box2">
+                    <input type="file" name="hair_image" id="hairInput" accept="image/*" required>
+                    <div id="box2Content">
+                        <div class="upload-icon">👤</div>
+                        <div class="upload-title">Head / Crown Photo</div>
+                        <div class="upload-desc">Evaluates Norwood hair density</div>
+                        <span class="btn-fake">Choose Head Image</span>
+                    </div>
+                    <img id="hairPreviewImg" class="preview-img" alt="Hair Preview">
+                    <div class="filename-display" id="file2Text"></div>
+                </div>
+            </div>
+
+            <!-- Part 2: Questionnaire -->
+            <div class="section-title">2. Clinical Profile & Risk Factors</div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" name="age" value="28" min="15" max="80" required>
+                </div>
+                <div class="form-group">
+                    <label>Family History of Hair Loss</label>
+                    <select name="genetics">
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Stress Level</label>
+                    <select name="stress">
+                        <option value="Low">Low</option>
+                        <option value="Moderate" selected>Moderate</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hormonal Changes</label>
+                    <select name="hormonal_changes">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Diagnosed Medical Conditions</label>
+                    <select name="medical_condition">
+                        <option value="None">None / Clear</option>
+                        <option value="Alopecia Areata">Alopecia Areata</option>
+                        <option value="Androgenetic Alopecia">Androgenetic Alopecia</option>
+                        <option value="Seborrheic Dermatitis">Seborrheic Dermatitis</option>
+                        <option value="Psoriasis">Psoriasis</option>
+                        <option value="Dermatitis">Dermatitis</option>
+                        <option value="Thyroid Problems">Thyroid Problems</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nutritional Deficiencies</label>
+                    <select name="nutritional_deficiencies">
+                        <option value="None">None / Balanced</option>
+                        <option value="Zinc Deficiency">Zinc Deficiency</option>
+                        <option value="Biotin Deficiency">Biotin Deficiency</option>
+                        <option value="Iron deficiency">Iron Deficiency</option>
+                        <option value="Vitamin D Deficiency">Vitamin D Deficiency</option>
+                        <option value="Protein deficiency">Protein Deficiency</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">Run AI Diagnostics</button>
+        </form>
+
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p>Running Multi-modal Neural Inference...</p>
+        </div>
+
+        <!-- Part 3: Results Dashboard -->
+        <div id="resultsArea">
+            <div class="section-title">Diagnostic Results</div>
+            
+            <div class="results-grid">
+                <div class="result-stat">
+                    <div class="stat-label">Scalp Condition</div>
+                    <div class="stat-value" id="rCondition">-</div>
+                    <div class="stat-sub" id="rCondConf">Confidence: 0%</div>
+                </div>
+
+                <div class="result-stat">
+                    <div class="stat-label">Hair Loss Stage</div>
+                    <div class="stat-value" id="rDensity">-</div>
+                    <div class="stat-sub" id="rDensConf">Confidence: 0%</div>
+                </div>
+
+                <div class="result-stat">
+                    <div class="stat-label">Systemic Risk Score</div>
+                    <div class="stat-value" id="rRisk">-</div>
+                    <div class="stat-sub" id="rRiskText">Risk Assessment</div>
+                </div>
+            </div>
+
+            <div class="scale-guide">
+                <h4>Norwood-Hamilton Hair Density Scale Guide:</h4>
+                <div class="scale-list">
+                    <div class="scale-item" id="item-type_1">Type 1<br><small>Normal</small></div>
+                    <div class="scale-item" id="item-type_2">Type 2<br><small>Mild temple</small></div>
+                    <div class="scale-item" id="item-type_3">Type 3<br><small>Early thinning</small></div>
+                    <div class="scale-item" id="item-type_4">Type 4<br><small>Front & vertex</small></div>
+                    <div class="scale-item" id="item-type_5">Type 5<br><small>Advanced loss</small></div>
+                    <div class="scale-item" id="item-type_6">Type 6<br><small>Merged loss</small></div>
+                    <div class="scale-item" id="item-type_7">Type 7<br><small>Severe</small></div>
+                </div>
+            </div>
+
+            <div class="section-title">Personalized Care Routine</div>
+            <div class="routine-box" id="rRoutine"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Live Image Preview Functions
+    document.getElementById('scalpInput').onchange = function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('scalpPreviewImg');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                
+                const txt = document.getElementById('file1Text');
+                txt.innerText = '✓ ' + document.getElementById('scalpInput').files[0].name;
+                txt.style.display = 'block';
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    };
+
+    document.getElementById('hairInput').onchange = function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('hairPreviewImg');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                
+                const txt = document.getElementById('file2Text');
+                txt.innerText = '✓ ' + document.getElementById('hairInput').files[0].name;
+                txt.style.display = 'block';
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    };
+
+    const NORWOOD_NAMES = {
+        'type_1': 'Type 1 (Normal / No Recession)',
+        'type_2': 'Type 2 (Mild Temple Recession)',
+        'type_3': 'Type 3 (Early Pattern Thinning)',
+        'type_4': 'Type 4 (Frontal & Crown Thinning)',
+        'type_5': 'Type 5 (Advanced Hair Thinning)',
+        'type_6': 'Type 6 (Severe Hair Loss)',
+        'type_7': 'Type 7 (Extensive Hair Loss)'
+    };
+
+    const form = document.getElementById('diagForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loader = document.getElementById('loader');
+    const resultsArea = document.getElementById('resultsArea');
+
+    form.onsubmit = async function(e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        loader.style.display = 'block';
+        resultsArea.style.display = 'none';
+
+        const formData = new FormData(form);
+
+        try {
+            const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                // Scalp Condition
+                document.getElementById('rCondition').innerText = data.scalp_condition.condition.replace(/-/g, ' ').toUpperCase();
+                document.getElementById('rCondConf').innerText = `Confidence: ${data.scalp_condition.confidence}%`;
+
+                // Norwood Density Stage & Active Highlight
+                document.getElementById('rDensity').innerText = data.hair_density.density_level.toUpperCase();
+                document.getElementById('rDensConf').innerText = `Confidence: ${data.hair_density.confidence}%`;
+
+                // Highlight the active Type in the Norwood Guide
+                document.querySelectorAll('.scale-item, .norwood-item').forEach(el => el.classList.remove('highlight', 'active'));
+                const activeBox = document.getElementById('item-' + data.hair_density.norwood_type);
+                if (activeBox) {
+                    activeBox.classList.add('highlight');
+                }
+
+                // Systemic Risk
+                document.getElementById('rRisk').innerText = `${data.hair_loss_risk}%`;
+                document.getElementById('rRiskText').innerText = data.hair_loss_risk > 50 ? 'High Vulnerability' : 'Low Vulnerability';
+
+                // Routine Text
+                document.getElementById('rRoutine').innerText = data.routine;
+
+                resultsArea.style.display = 'block';
+                resultsArea.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (err) {
+            alert('Failed to connect to server: ' + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            loader.style.display = 'none';
+        }
+    };
+</script>
+
+</body>
+</html>

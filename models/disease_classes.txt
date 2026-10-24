@@ -1,0 +1,14 @@
+acne-keloidalis
+alopecia-areata
+androgenic-alopecia
+discoid-lupus
+dissecting-cellulitis
+folliculitis-decalvans
+hirsutism
+hot-comb-alopecia
+lichen-planopilaris
+pseudopelade
+telogen-effluvium
+trichorrhexis-nodosa
+trichotillomania
+tufted-folliculitis
